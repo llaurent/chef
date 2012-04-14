@@ -33,6 +33,7 @@ class Chef
         @action = :create
         @link_type = :symbolic
         @target_file = name
+        @cwd = nil
         @allowed_actions.push(:create, :delete)
         @provider = Chef::Provider::Link
       end
@@ -59,6 +60,14 @@ class Chef
           :link_type,
           real_arg,
           :equal_to => [ :symbolic, :hard ]
+        )
+      end
+
+      def cwd(arg=nil)
+        set_or_return(
+          :cwd,
+          arg,
+         :kind_of => String
         )
       end
 

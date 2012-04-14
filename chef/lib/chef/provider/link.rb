@@ -21,6 +21,7 @@ require 'chef/log'
 require 'chef/mixin/shell_out'
 require 'chef/resource/link'
 require 'chef/provider'
+require 'pathname'
 
 class Chef
   class Provider
@@ -48,6 +49,11 @@ class Chef
       def load_current_resource
         @current_resource = Chef::Resource::Link.new(@new_resource.name)
         @current_resource.target_file(@new_resource.target_file)
+        # chdir to cwd if target_file is not an absolute path
+        if @new_resource.cwd and not Pathname.new(@new_resource.target_file).absolute?
+          @current_resource.cwd(@new_resource.cwd)
+          chdir(@new_resource.cwd)
+        end
         @current_resource.link_type(@new_resource.link_type)
         if @new_resource.link_type == :symbolic
           if ::File.exists?(@current_resource.target_file) && file_class.symlink?(@current_resource.target_file)
@@ -95,6 +101,7 @@ class Chef
         if @new_resource.link_type == :symbolic
           enforce_ownership_and_permissions
         end
+        chdir(@old_wd)
       end
 
       def action_delete
@@ -117,10 +124,23 @@ class Chef
              end
           end
         end
+        chdir(@old_wd)
       end
     end
 
-    # private
+    private
+    def chdir(dir, save_oldwd = true)
+      unless dir.nil?
+        if save_oldwd
+          @old_wd = Dir.getwd
+          Chef::Log.debug("current working dir: #{@old_wd}, changing to #{dir}")
+        else
+          @old_wd = nil
+          hef::Log.debug("current working dir: #{Dir.getwd} (not saved), changing to #{dir}")
+        end
+        Dir.chdir(dir)
+      end
+    end
     # def hardlink?(target, to)
     #   s = file_class()
     #   if file_class.respond_to?(:hardlink?)
