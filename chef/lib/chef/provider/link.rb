@@ -136,7 +136,7 @@ class Chef
           Chef::Log.debug("current working dir: #{@old_wd}, changing to #{dir}")
         else
           @old_wd = nil
-          hef::Log.debug("current working dir: #{Dir.getwd} (not saved), changing to #{dir}")
+          Chef::Log.debug("current working dir: #{Dir.getwd} (not saved), changing to #{dir}")
         end
         Dir.chdir(dir)
       end
