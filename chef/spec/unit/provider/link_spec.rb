@@ -189,21 +189,6 @@ describe Chef::Resource::Link do
         Etc.stub!(:getpwnam).and_return(getpwnam)
       end
 
-      describe "when the source for the link contains expandable pieces" do
-        before do
-          @new_resource.target_file("#{CHEF_SPEC_DATA}/fofile-link")
-          @new_resource.to("../foo")
-          @provider.stub!(:enforce_ownership_and_permissions)
-
-           @provider.file_class.stub!(:symlink)
-        end
-
-        it "should expand the path" do
-          ::File.should_receive(:expand_path).with("../foo", "#{CHEF_SPEC_DATA}/fofile-link").and_return("#{CHEF_SPEC_DATA}/fofile-link")
-          @provider.action_create
-        end
-      end
-
       describe "when the source for the link doesn't match" do
         before do
           @new_resource.to("#{CHEF_SPEC_DATA}/lolololol")
@@ -239,6 +224,10 @@ describe Chef::Resource::Link do
         describe "and we're building a hard link" do
           before do
             @new_resource.stub!(:link_type).and_return(:hard)
+            # telling load_current_resource the link doesn't exist
+            # we could also tell it the hard links don't match
+            File.should_receive(:exists?).with("#{CHEF_SPEC_DATA}/fofile-link").and_return(false)
+            @provider.load_current_resource
           end
 
           it "should use the appropriate link method to create the link" do

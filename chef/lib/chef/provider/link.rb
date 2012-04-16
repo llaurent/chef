@@ -75,21 +75,20 @@ class Chef
       end
 
       def action_create
-        if @current_resource.to != ::File.expand_path(@new_resource.to, @new_resource.target_file)
-          if @new_resource.link_type == :symbolic
-            unless (file_class.symlink?(@new_resource.target_file) && file_class.readlink(@new_resource.target_file) == @new_resource.to)
-              if file_class.symlink?(@new_resource.target_file) || ::File.exist?(@new_resource.target_file)
-                ::File.unlink(@new_resource.target_file)
-              end
-              file_class.symlink(@new_resource.to,@new_resource.target_file)
-              Chef::Log.debug("#{@new_resource} created #{@new_resource.link_type} link from #{@new_resource.to} -> #{@new_resource.target_file}")
-              Chef::Log.info("#{@new_resource} created")
+        if @new_resource.link_type == :symbolic
+          unless (file_class.symlink?(@new_resource.target_file) && file_class.readlink(@new_resource.target_file) == @new_resource.to)
+            if file_class.symlink?(@new_resource.target_file) || ::File.exist?(@new_resource.target_file)
+              ::File.unlink(@new_resource.target_file)
             end
-          elsif @new_resource.link_type == :hard
-            file_class.link(@new_resource.to, @new_resource.target_file)
+            file_class.symlink(@new_resource.to,@new_resource.target_file)
             Chef::Log.debug("#{@new_resource} created #{@new_resource.link_type} link from #{@new_resource.to} -> #{@new_resource.target_file}")
             Chef::Log.info("#{@new_resource} created")
+            @new_resource.updated_by_last_action(true)
           end
+        elsif @new_resource.link_type == :hard && @current_resource.to == ""
+          file_class.link(@new_resource.to, @new_resource.target_file)
+          Chef::Log.debug("#{@new_resource} created #{@new_resource.link_type} link from #{@new_resource.to} -> #{@new_resource.target_file}")
+          Chef::Log.info("#{@new_resource} created")
           @new_resource.updated_by_last_action(true)
         end
         if @new_resource.link_type == :symbolic
