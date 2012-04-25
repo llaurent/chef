@@ -204,6 +204,32 @@ describe Chef::Resource::Link do
         end
       end
 
+      describe "when the source for the link match" do
+        before do 
+          @current_resource = Chef::Resource::Link.new("#{CHEF_SPEC_DATA}/fofile-link")
+          @current_resource.to "just_a_filename"
+          @provider.current_resource = @current_resource
+        end
+
+        describe "when the source for the link is a filename without any path" do
+          before do
+            @new_resource.target_file("#{CHEF_SPEC_DATA}/fofile-link")
+            @new_resource.to("just_a_filename")
+            @provider.stub!(:enforce_ownership_and_permissions)
+
+            @provider.file_class.stub!(:symlink)
+          end
+
+          it "shouldn't set updated to true if links match" do
+            # wrong logic with ::File::expand_path:
+            # ::File.expand_path("filename_with_no_path_and_nothing_to_be_expanded", "/path/dir") == ::File.join("/path/dir","filename_with_no_path_and_nothing_to_be_expanded")
+            ::File.should_receive(:expand_path).with("just_a_filename", "#{CHEF_SPEC_DATA}/fofile-link").and_return(::File.join("#{CHEF_SPEC_DATA}/fofile-link","just_a_filename"))
+            @provider.action_create
+            @new_resource.should_not be_updated
+          end
+        end
+      end
+
       describe "when the source for the link doesn't match" do
         before do
           @new_resource.to("#{CHEF_SPEC_DATA}/lolololol")
