@@ -224,6 +224,8 @@ describe Chef::Resource::Link do
             # wrong logic with ::File::expand_path:
             # ::File.expand_path("filename_with_no_path_and_nothing_to_be_expanded", "/path/dir") == ::File.join("/path/dir","filename_with_no_path_and_nothing_to_be_expanded")
             ::File.should_receive(:expand_path).with("just_a_filename", "#{CHEF_SPEC_DATA}/fofile-link").and_return(::File.join("#{CHEF_SPEC_DATA}/fofile-link","just_a_filename"))
+            @provider.file_class.should_receive(:symlink?).with("#{CHEF_SPEC_DATA}/fofile-link").and_return(true)
+            @provider.file_class.should_receive(:symlink?).with("#{CHEF_SPEC_DATA}/fofile-link").and_return("just_a_filename")
             @provider.action_create
             @new_resource.should_not be_updated
           end
