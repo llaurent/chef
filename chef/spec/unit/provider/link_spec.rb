@@ -189,6 +189,36 @@ describe Chef::Resource::Link do
         Etc.stub!(:getpwnam).and_return(getpwnam)
       end
 
+      describe "when the source for the link match" do
+        before do 
+          @current_resource = Chef::Resource::Link.new("#{CHEF_SPEC_DATA}/fofile-link")
+          @new_resource.target_file("#{CHEF_SPEC_DATA}/fofile-link")
+        end
+
+        {
+          "just_a_filename" => "a filename without any path",
+          "../foo" => "a filename that could be expanded"
+        }.each do |to, desc|
+          describe "when the source for the link is #{desc}" do
+            before do
+              @current_resource.to(to)
+              @provider.current_resource = @current_resource
+              @new_resource.to(to)
+              @provider.stub!(:enforce_ownership_and_permissions)
+
+              @provider.file_class.stub!(:symlink)
+            end
+            
+            it "shouldn't set updated to true" do
+              @provider.file_class.should_receive(:symlink?).with("#{CHEF_SPEC_DATA}/fofile-link").and_return(true)
+              @provider.file_class.should_receive(:readlink).with("#{CHEF_SPEC_DATA}/fofile-link").and_return(to)
+              @provider.action_create
+              @new_resource.should_not be_updated
+            end
+          end
+        end
+      end
+
       describe "when the source for the link doesn't match" do
         before do
           @new_resource.to("#{CHEF_SPEC_DATA}/lolololol")
