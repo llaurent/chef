@@ -172,12 +172,12 @@ class Chef
           end
         end
 
-        def network_device?
-          @new_resource.device =~ /:/ || @new_resource.device =~ /\/\//
+        def looks_like_a_network_device?
+          @new_resource.device =~ /:/ || @new_resource.device =~ /^\/\//
         end
 
         def device_should_exist?
-          ( not network_device? ) &&
+          ( not looks_like_a_network_device? ) &&
             ( not %w[ tmpfs fuse ].include? @new_resource.fstype )
         end
 
@@ -221,7 +221,7 @@ class Chef
         end
 
         def device_mount_regex
-          if network_device?
+          if looks_like_a_network_device?
             # ignore trailing slash
             Regexp.escape(device_real)+"/?"
           elsif ::File.symlink?(device_real)

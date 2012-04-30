@@ -64,7 +64,7 @@ describe Chef::Provider::Mount::Mount do
         "cifs" => "//cifsserver/share" }.each do |type, fs_spec|
         it "should detect network fs_spec (#{type})" do
           @new_resource.device fs_spec
-          @provider.network_device?.should be_true
+          @provider.looks_like_a_network_device?.should be_true
         end
 
         it "should ignore trailing slash and set mounted to true for network mount (#{type})" do
